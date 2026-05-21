@@ -10,6 +10,32 @@ class TestConfig:
         assert config.get("app.name") == "test"
         assert config.get("app.port") == 8080
 
+    def test_failed_reload_keeps_existing_config(self, tmp_path):
+        config_file = tmp_path / "config.json"
+        config_file.write_text('{"app": {"name": "stable", "port": 8080}}')
+        config = Config(str(config_file))
+
+        config_file.write_text('{"app": {"name": "broken", "port":')
+
+        with pytest.raises(ValueError):
+            config.load(str(config_file))
+
+        assert config.get("app.name") == "stable"
+        assert config.get("app.port") == 8080
+
+    def test_invalid_config_root_keeps_existing_config(self, tmp_path):
+        config_file = tmp_path / "config.json"
+        config_file.write_text('{"app": {"name": "stable"}}')
+        config = Config(str(config_file))
+
+        config_file.write_text('["not", "an", "object"]')
+
+        with pytest.raises(ValueError, match="JSON object"):
+            config.load(str(config_file))
+
+        assert config.get("app.name") == "stable"
+        assert config.to_dict() == {"app": {"name": "stable"}}
+
     def test_default_value(self):
         config = Config()
         assert config.get("nonexistent.key", "default") == "default"

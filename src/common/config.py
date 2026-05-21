@@ -14,7 +14,14 @@ class Config:
 
     def load(self, path: str) -> None:
         with open(path) as f:
-            self._data = json.load(f)
+            loaded_data = json.load(f)
+
+        self._validate_data(loaded_data)
+        self._data = loaded_data
+
+    def _validate_data(self, data: Any) -> None:
+        if not isinstance(data, dict):
+            raise ValueError("Configuration root must be a JSON object")
 
     def _load_env_overrides(self) -> None:
         prefix = "AO_"
