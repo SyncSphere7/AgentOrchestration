@@ -1,8 +1,16 @@
+import os
+
 import pytest
 from src.common.config import Config
 
 
 class TestConfig:
+    @pytest.fixture(autouse=True)
+    def clear_ao_env(self, monkeypatch):
+        for key in os.environ:
+            if key.startswith("AO_"):
+                monkeypatch.delenv(key, raising=False)
+
     def test_load_config(self, tmp_path):
         config_file = tmp_path / "config.json"
         config_file.write_text('{"app": {"name": "test", "port": 8080}}')
